@@ -51,7 +51,7 @@ def test_balance_is_not_settable_directly():
 
 def test_verify_password():
     user = User(email="a@b.com", _password_hash='h')
-    assert user.veriry_password("h")
+    assert user.verify_password("h")
     assert not user.verify_password('wrong')
     
 

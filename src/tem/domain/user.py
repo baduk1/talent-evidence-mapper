@@ -53,7 +53,7 @@ class Administrator(User):
     Принцип наследования ООП
     """
 
-    rols: UserRole = UserRole.ADMIN
+    role: UserRole = UserRole.ADMIN
 
     def approve_top_up(self, user: User, amount: Decimal) -> None:
         user.credit(amount)
