@@ -47,7 +47,7 @@ class MLModel(ABC, Generic[InputT, ResultT]):
         return self._version
 
     @property
-    def verscredit_cost(self) -> Decimal:
+    def credit_cost(self) -> Decimal:
         return self._credit_cost
 
     @abstractmethod
