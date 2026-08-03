@@ -38,7 +38,7 @@ def test_execute_charges_only_valid_items():
     task = MLTask(user, model, [valid_item(1), invalid_item(), valid_item(2)])
     result = task.execute()
     assert result.credits_charged == Decimal("2")
-    assert user.balance == Decimal("8")
+    assert user.balance.amount == Decimal("8")
     assert task.status == TaskStatus.PARTIALLY_COMPLETED
 
 
@@ -66,5 +66,5 @@ def test_execute_fails_without_charging_when_balance_is_low():
     with pytest.raises(InsufficientBalanceError):
         task.execute()
     assert task.status == TaskStatus.FAILED
-    assert user.balance == Decimal("1")
+    assert user.balance.amount == Decimal("1")
     assert task.debit_transaction is None

@@ -16,7 +16,7 @@ from tem.domain.user import Administrator, User
 def main() -> None:
     admin = Administrator(email="admin@example.com", _password_hash="hashed-admin")
     user = User(email="user@example.com", _password_hash="hashed-user")
-    print("Registered user:", user.email, "| balance:", user.balance)
+    print("Registered user:", user.email, "| balance:", user.balance.amount)
 
     ledger = TransactionHistory()
 
@@ -24,7 +24,7 @@ def main() -> None:
     top_up = CreditTransaction(user, Decimal("10"))
     top_up.apply()
     ledger.add(top_up)
-    print("After admin-approved top-up:", user.balance)
+    print("After admin-approved top-up:", user.balance.amount)
 
     model = KeywordEvidenceClassifierModel(
         model_id="evidence-mapper-keyword-v0",
@@ -62,7 +62,7 @@ def main() -> None:
     print()
     print("Task status:", task.status.value)
     print("Credits charged:", result.credits_charged)
-    print("Balance after task:", user.balance)
+    print("Balance after task:", user.balance.amount)
     print("Invalid items:", [(error.item_index, error.messages) for error in result.invalid_items])
     for index, mapping in enumerate(result.predictions):
         print(

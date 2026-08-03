@@ -15,20 +15,20 @@ def make_user(balance: str = "0") -> User:
 
 def test_new_user_starts_with_zero_balance():
     user = User(email="a@b.com", _password_hash="h")
-    assert user.balance == Decimal("0")
+    assert user.balance.amount == Decimal("0")
     assert user.role == UserRole.USER
 
 
 def test_credit_increases_balance():
     user = make_user()
     user.credit(Decimal("10"))
-    assert user.balance == Decimal("10")
+    assert user.balance.amount == Decimal("10")
 
 
 def test_debit_decreases_balance():
     user = make_user("10")
     user.debit(Decimal("4"))
-    assert user.balance == Decimal("6")
+    assert user.balance.amount == Decimal("6")
 
 
 def test_debit_beyond_balance_raises():
@@ -43,10 +43,10 @@ def test_credit_rejects_non_positive_amount():
         user.credit(Decimal("0"))
 
 
-def test_balance_is_not_settable_directly():
+def test_balance_amount_is_not_settable_directly():
     user = make_user("5")
     with pytest.raises(AttributeError):
-        user.balance = Decimal("100")
+        user.balance.amount = Decimal("100")
 
 
 def test_verify_password():
@@ -60,6 +60,6 @@ def test_administrator_approves_top_up():
     user = make_user()
     assert admin.role == UserRole.ADMIN
     admin.approve_top_up(user, Decimal("7"))
-    assert user.balance == Decimal("7")
+    assert user.balance.amount == Decimal("7")
 
     

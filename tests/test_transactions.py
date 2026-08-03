@@ -9,7 +9,7 @@ def test_credit_transaction_applies():
     user = User(email="a@b.com", _password_hash="h")
     tx = CreditTransaction(user, Decimal("20"))
     tx.apply()
-    assert user.balance == Decimal("20")
+    assert user.balance.amount == Decimal("20")
     assert tx.type == TransactionType.CREDIT
 
 
@@ -18,7 +18,7 @@ def test_debit_transaction_applies():
     CreditTransaction(user, Decimal("20")).apply()
     tx = DebitTransaction(user, Decimal("5"))
     tx.apply()
-    assert user.balance == Decimal("15")
+    assert user.balance.amount == Decimal("15")
     assert tx.type == TransactionType.DEBIT
 
 
@@ -31,7 +31,7 @@ def test_transactions_are_polymorphic():
     ]
     for tx in ledger:
         tx.apply()
-    assert user.balance == Decimal("12")
+    assert user.balance.amount == Decimal("12")
 
 
 def test_transaction_carries_optional_task_link():
