@@ -81,6 +81,6 @@ class MLTask(Generic[InputT, ResultT]):
         if cost > 0:
             self.debit_transaction = DebitTransaction(self.user, cost, task_id=self.id)
             self.debit_transaction.apply()
-        self,status = TaskStatus.COMPLETED if not errors else TaskStatus.PARTIALLY_COMPLETED
+        self.status = TaskStatus.COMPLETED if not errors else TaskStatus.PARTIALLY_COMPLETED
         return PredictionResult(self.id, predictions, errors, cost)
     
