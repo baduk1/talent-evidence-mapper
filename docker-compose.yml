@@ -1,0 +1,50 @@
+services:
+  # 1. Бэкенд-приложение. Конфигурируется через env_file, исходники
+  #    подключены volume'ом (правим локально - контейнер видит сразу).
+  #    Наружу порты не пробрасывает: снаружи до него достукивается
+  #    только web-proxy.
+  app:
+    build: ./app
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app/src:/app/src
+    expose:
+      - "8000"
+    depends_on:
+      - database
+      - rabbitmq
+    restart: on-failure
+
+  # 2. Обратный прокси на образе Nginx. Зависит от app и единственный
+  #    публикует наружу порты 80 и 443.
+  web-proxy:
+    build: ./web-proxy
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    restart: on-failure
+
+  # 3. Брокер сообщений. 5672 - AMQP, 15672 - веб-админка.
+  #    Данные на volume'е, чтобы очереди переживали перезапуск.
+  #    restart: on-failure - перезагружаться при сбоях.
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./data/rabbitmq:/var/lib/rabbitmq
+    restart: on-failure
+
+  # 4. База данных на образе postgres. Данные на volume'е, чтобы
+  #    переживали удаление контейнера.
+  database:
+    image: postgres:16
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    restart: on-failure
