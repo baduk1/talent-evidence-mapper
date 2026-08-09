@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from ...domain.enums import TransactionType, UserRole
 from ...domain.exceptions import InsufficientBalanceError, InvalidAmountError
-from .models import MLModelORM, TransactionORM, UserORM, PredictionTaskORM, TaskStatus
+from .models import MLModelORM, TransactionORM, UserORM, PredictionTaskORM, TaskStatus, PredictionRecordORM
 
 
 def create_user(
@@ -120,5 +120,42 @@ def list_tasks_for_user(session: Session, user_id: str) -> list[PredictionTaskOR
         select(PredictionTaskORM)
         .where(PredictionTaskORM.user_id == user_id)
         .order_by(PredictionTaskORM.created_at.desc())
+    )
+    return list(session.exec(stmt))
+
+
+def get_task(session: Session, task_id: str) -> PredictionTaskORM | None:
+    return session.get(PredictionTaskORM, task_id)
+
+
+def create_prediction_record(
+    session: Session,
+    task_id: str,
+    item_index: int,
+    title: str,
+    primary_category: str,
+    confidence: float,
+    human_review_required: bool,
+    worker_id: str,
+) -> PredictionRecordORM:
+    record = PredictionRecordORM(
+        task_id=task_id,
+        item_index=item_index,
+        title=title,
+        primary_category=primary_category,
+        confidence=confidence,
+        human_review_required=human_review_required,
+        worker_id=worker_id,
+    )
+    session.add(record)
+    session.flush()
+    return record
+
+
+def list_records_for_task(session: Session, task_id: str) -> list[PredictionRecordORM]:
+    stmt = (
+        select(PredictionRecordORM)
+        .where(PredictionRecordORM.task_id == task_id)
+        .order_by(PredictionRecordORM.item_index)
     )
     return list(session.exec(stmt))

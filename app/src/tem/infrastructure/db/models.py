@@ -61,3 +61,20 @@ class PredictionTaskORM(SQLModel, table=True):
     status: TaskStatus = Field(default=TaskStatus.CREATED, sa_column=Column(SAEnum(TaskStatus)))
     credits_charged: Decimal = Field(default=Decimal("0"), sa_column=Column(Numeric(18, 2)))
     created_at: datetime = Field(default_factory=_now)
+
+
+
+class PredictionRecordORM(SQLModel, table=True):
+    """Результат обработки одного item'а воркером."""
+
+    __tablename__ = "prediction_records"
+
+    id: str = Field(default_factory=_uuid, primary_key=True, max_length=36)
+    task_id: str = Field(foreign_key="prediction_tasks.id", max_length=36)
+    item_index: int = Field(default=0)
+    title: str = Field(max_length=255)
+    primary_category: str = Field(max_length=64)
+    confidence: float = Field(default=0.0)
+    human_review_required: bool = Field(default=True)
+    worker_id: str = Field(max_length=64)  # кто обработал - видно распределение
+    created_at: datetime = Field(default_factory=_now)

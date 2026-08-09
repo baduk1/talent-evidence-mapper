@@ -86,3 +86,24 @@ class TransactionEntry(BaseModel):
     type: str
     task_id: str | None
     created_at: datetime
+
+
+class PredictAccepted(BaseModel):
+    task_id: str
+    status: str  # всегда "queued" - обработка асинхронная
+
+
+class PredictionRecordOut(BaseModel):
+    item_index: int
+    title: str
+    primary_category: str
+    confidence: float
+    human_review_required: bool
+    worker_id: str
+
+
+class TaskResultResponse(BaseModel):
+    task_id: str
+    status: str
+    credits_charged: Decimal
+    records: list[PredictionRecordOut]
