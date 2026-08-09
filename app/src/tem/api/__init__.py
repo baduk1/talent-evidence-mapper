@@ -1,0 +1,1 @@
+"""REST API слой: роутеры FastAPI и pydantic-схемы."""

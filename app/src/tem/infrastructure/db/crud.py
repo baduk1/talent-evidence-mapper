@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from ...domain.enums import TransactionType, UserRole
 from ...domain.exceptions import InsufficientBalanceError, InvalidAmountError
-from .models import MLModelORM, TransactionORM, UserORM
+from .models import MLModelORM, TransactionORM, UserORM, PredictionTaskORM, TaskStatus
 
 
 def create_user(
@@ -93,3 +93,32 @@ def charge(session: Session, user_id: str, amount: Decimal, task_id: str | None 
     add_transaction(session, user_id, amount, TransactionType.DEBIT, task_id=task_id)
     session.flush()
     return user.balance
+
+
+def create_task(session: Session, user_id: str, model_id: str) -> PredictionTaskORM:
+    task = PredictionTaskORM(user_id=user_id, model_id=model_id)
+    session.add(task)
+    session.flush()
+    return task
+
+
+def finish_task(
+    session: Session,
+    task_id: str,
+    status: TaskStatus,
+    credits_charged: Decimal,
+) -> PredictionTaskORM:
+    task = session.get(PredictionTaskORM, task_id)
+    task.status = status
+    task.credits_charged = credits_charged
+    session.flush()
+    return task
+
+
+def list_tasks_for_user(session: Session, user_id: str) -> list[PredictionTaskORM]:
+    stmt = (
+        select(PredictionTaskORM)
+        .where(PredictionTaskORM.user_id == user_id)
+        .order_by(PredictionTaskORM.created_at.desc())
+    )
+    return list(session.exec(stmt))
