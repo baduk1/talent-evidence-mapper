@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./tem.db"  # запасной вариант вне Docker
     APP_NAME: str = "talent-evidence-mapper"
     DEBUG: bool = False
+    JWT_SECRET: str = "dev-secret-change-me"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
 
     model_config = SettingsConfigDict(
         env_file=".env",
