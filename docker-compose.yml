@@ -48,3 +48,19 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     restart: on-failure
+
+  # 5. ML-воркер. Слушает очередь RabbitMQ и обрабатывает задачи.
+  #    Контекст сборки - корень: воркер переиспользует пакет tem из app/src.
+  #    Запуск нескольких копий: docker-compose up -d --scale ml_worker=2
+  ml_worker:
+    build:
+      context: .
+      dockerfile: ml_worker/Dockerfile
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app/src:/app/src
+    depends_on:
+      - database
+      - rabbitmq
+    restart: on-failure
