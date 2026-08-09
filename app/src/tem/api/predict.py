@@ -9,7 +9,7 @@ from ..domain.evidence import EvidenceItem, KeywordEvidenceClassifierModel
 from ..domain.exceptions import InsufficientBalanceError
 from ..infrastructure.db import crud
 from ..infrastructure.db.database import get_session
-from ..infrastructure.db.models import MLModelORM
+from ..infrastructure.db.models import MLModelORM, UserORM
 from .schemas import (
     CategoryScoreOut,
     InvalidItemOut,
@@ -17,6 +17,7 @@ from .schemas import (
     PredictResponse,
     PredictionOut,
 )
+from .security import get_current_user
 
 predict_route = APIRouter()
 
@@ -37,11 +38,11 @@ def _prediction_out(item: EvidenceItem, model: KeywordEvidenceClassifierModel) -
 
 
 @predict_route.post("", response_model=PredictResponse)
-def predict(data: PredictRequest, session: Session = Depends(get_session)) -> PredictResponse:
-    user = crud.get_user_by_id(session, data.user_id)
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Пользователь не найден")
-
+def predict(
+    data: PredictRequest,
+    user: UserORM = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> PredictResponse:
     if data.model_id is not None:
         model_orm = session.get(MLModelORM, data.model_id)
     else:
