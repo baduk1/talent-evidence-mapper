@@ -15,13 +15,18 @@ class SignInRequest(BaseModel):
     password: str
 
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+
+
 class BalanceResponse(BaseModel):
     user_id: str
     balance: Decimal
 
 
 class TopUpRequest(BaseModel):
-    user_id: str
     amount: Decimal
 
 
@@ -36,7 +41,6 @@ class EvidenceItemIn(BaseModel):
 
 
 class PredictRequest(BaseModel):
-    user_id: str
     items: list[EvidenceItemIn]
     model_id: str | None = None  # не передали - берём первую активную
 

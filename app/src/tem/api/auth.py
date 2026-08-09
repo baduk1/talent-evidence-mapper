@@ -1,4 +1,4 @@
-"""Регистрация и авторизация. Базовая версия, как на лекции: без JWT."""
+"""Регистрация и авторизация. После входа выдаём JWT."""
 import hashlib
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -6,7 +6,9 @@ from sqlmodel import Session
 
 from ..infrastructure.db import crud
 from ..infrastructure.db.database import get_session
-from .schemas import SignInRequest, SignUpRequest
+from ..infrastructure.db.models import UserORM
+from .schemas import SignInRequest, SignUpRequest, TokenResponse
+from .security import create_access_token, get_current_user
 
 auth_route = APIRouter()
 
@@ -28,8 +30,8 @@ def signup(data: SignUpRequest, session: Session = Depends(get_session)) -> dict
     return {"message": "Пользователь зарегистрирован", "user_id": user.id}
 
 
-@auth_route.post("/signin")
-def signin(data: SignInRequest, session: Session = Depends(get_session)) -> dict:
+@auth_route.post("/signin", response_model=TokenResponse)
+def signin(data: SignInRequest, session: Session = Depends(get_session)) -> TokenResponse:
     user = crud.get_user_by_email(session, data.email)
     if user is None:
         raise HTTPException(
@@ -41,4 +43,18 @@ def signin(data: SignInRequest, session: Session = Depends(get_session)) -> dict
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Неверный пароль",
         )
-    return {"message": "Вход выполнен", "user_id": user.id, "role": user.role.value}
+    return TokenResponse(
+        access_token=create_access_token(user.id),
+        user_id=user.id,
+    )
+
+
+@auth_route.get("/me")
+def me(user: UserORM = Depends(get_current_user)) -> dict:
+    """Проверка токена: возвращает владельца токена."""
+    return {
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role.value,
+        "balance": user.balance,
+    }
