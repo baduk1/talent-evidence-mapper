@@ -40,6 +40,14 @@ def client(session):
     app.dependency_overrides.clear()
 
 
+@pytest.fixture()
+def published(monkeypatch):
+    """Перехватываем сообщения в RabbitMQ - в тестах брокера нет."""
+    messages = []
+    monkeypatch.setattr("tem.api.predict.send_task", messages.append)
+    return messages
+
+
 def signup(client, email="api@b.com", password="secret") -> str:
     response = client.post("/api/auth/signup", json={"email": email, "password": password})
     assert response.status_code == 201
@@ -114,46 +122,57 @@ def test_topup_rejects_non_positive_amount(client):
     assert response.status_code == 400
 
 
-def test_predict_charges_only_valid_items(client):
+def test_predict_queues_task_and_publishes_message(client, published):
     headers = auth_headers(client)
-    client.post("/api/balance/topup", json={"amount": 10}, headers=headers)
     response = client.post(
         "/api/predict",
-        json={"items": [valid_item(), {"title": "", "description": "short"}]},
+        json={"items": [valid_item()]},
         headers=headers,
     )
-    assert response.status_code == 200
+    assert response.status_code == 202
     body = response.json()
-    assert body["status"] == "partially_completed"
-    assert body["credits_charged"] == "1.00"
-    assert body["balance"] == "9.00"
-    assert len(body["predictions"]) == 1
-    assert body["invalid_items"][0]["item_index"] == 1
+    assert body["status"] == "queued"
+
+    # Сообщение ушло в очередь ровно с этой задачей
+    assert len(published) == 1
+    assert published[0]["task_id"] == body["task_id"]
+    assert published[0]["items"][0]["title"] == "OSS library"
+
+    # Задача лежит в БД со статусом created, результатов пока нет
+    result = client.get(f"/api/predict/{body['task_id']}", headers=headers)
+    assert result.status_code == 200
+    assert result.json()["status"] == "created"
+    assert result.json()["records"] == []
 
 
-def test_predict_insufficient_balance(client):
+def test_predict_requires_token(client, published):
+    response = client.post("/api/predict", json={"items": [valid_item()]})
+    assert response.status_code == 403
+    assert published == []
+
+
+def test_get_task_result_only_own(client, published):
     headers = auth_headers(client)
-    client.post("/api/balance/topup", json={"amount": 1}, headers=headers)
-    response = client.post(
-        "/api/predict",
-        json={"items": [valid_item("One"), valid_item("Two")]},
-        headers=headers,
-    )
-    assert response.status_code == 402
-    assert client.get("/api/balance", headers=headers).json()["balance"] == "1.00"
+    task_id = client.post(
+        "/api/predict", json={"items": [valid_item()]}, headers=headers
+    ).json()["task_id"]
+
+    # Чужая задача для другого пользователя выглядит как несуществующая
+    other_headers = auth_headers(client, email="other@b.com")
+    assert client.get(f"/api/predict/{task_id}", headers=other_headers).status_code == 404
 
 
-def test_history_endpoints_show_only_own_data(client):
+def test_history_endpoints_show_only_own_data(client, published):
     headers = auth_headers(client)
     client.post("/api/balance/topup", json={"amount": 5}, headers=headers)
     client.post("/api/predict", json={"items": [valid_item()]}, headers=headers)
 
     transactions = client.get("/api/history/transactions", headers=headers).json()
-    assert [tx["type"] for tx in transactions] == ["debit", "credit"]
+    assert [tx["type"] for tx in transactions] == ["credit"]
 
     predictions = client.get("/api/history/predictions", headers=headers).json()
     assert len(predictions) == 1
-    assert predictions[0]["status"] == "completed"
+    assert predictions[0]["status"] == "created"
 
     # Другой пользователь не видит чужую историю
     other_headers = auth_headers(client, email="other@b.com")
