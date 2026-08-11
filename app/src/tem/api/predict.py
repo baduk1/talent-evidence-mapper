@@ -8,6 +8,7 @@ from ..infrastructure.db.database import get_session
 from ..infrastructure.db.models import MLModelORM, UserORM
 from ..infrastructure.mq import send_task
 from .schemas import (
+    InvalidItemOut,
     PredictAccepted,
     PredictionRecordOut,
     PredictRequest,
@@ -53,7 +54,7 @@ def get_task_result(
     user: UserORM = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> TaskResultResponse:
-    """Статус задачи и результаты, когда воркер закончил. Только свои."""
+    """Статус задачи, результаты и отклонённые данные. Только свои."""
     task = crud.get_task(session, task_id)
     if task is None or task.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Задача не найдена")
@@ -71,5 +72,12 @@ def get_task_result(
                 worker_id=record.worker_id,
             )
             for record in crud.list_records_for_task(session, task_id)
+        ],
+        invalid_items=[
+            InvalidItemOut(
+                item_index=item_error.item_index,
+                messages=item_error.messages.split("; "),
+            )
+            for item_error in crud.list_item_errors_for_task(session, task_id)
         ],
     )
