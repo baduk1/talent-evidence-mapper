@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from ...domain.enums import TransactionType, UserRole
 from ...domain.exceptions import InsufficientBalanceError, InvalidAmountError
-from .models import MLModelORM, TransactionORM, UserORM, PredictionTaskORM, TaskStatus, PredictionRecordORM
+from .models import MLModelORM, TransactionORM, UserORM, PredictionTaskORM, TaskStatus, PredictionRecordORM, BatchItemErrorORM
 
 
 def create_user(
@@ -157,5 +157,23 @@ def list_records_for_task(session: Session, task_id: str) -> list[PredictionReco
         select(PredictionRecordORM)
         .where(PredictionRecordORM.task_id == task_id)
         .order_by(PredictionRecordORM.item_index)
+    )
+    return list(session.exec(stmt))
+
+
+def create_item_error(
+    session: Session, task_id: str, item_index: int, messages: str
+) -> BatchItemErrorORM:
+    item_error = BatchItemErrorORM(task_id=task_id, item_index=item_index, messages=messages)
+    session.add(item_error)
+    session.flush()
+    return item_error
+
+
+def list_item_errors_for_task(session: Session, task_id: str) -> list[BatchItemErrorORM]:
+    stmt = (
+        select(BatchItemErrorORM)
+        .where(BatchItemErrorORM.task_id == task_id)
+        .order_by(BatchItemErrorORM.item_index)
     )
     return list(session.exec(stmt))

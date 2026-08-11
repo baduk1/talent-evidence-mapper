@@ -78,3 +78,14 @@ class PredictionRecordORM(SQLModel, table=True):
     human_review_required: bool = Field(default=True)
     worker_id: str = Field(max_length=64)  # кто обработал - видно распределение
     created_at: datetime = Field(default_factory=_now)
+
+
+class BatchItemErrorORM(SQLModel, table=True):
+    """Причины отклонения невалидного item'а - показываем их в кабинете."""
+
+    __tablename__ = "batch_item_errors"
+
+    id: str = Field(default_factory=_uuid, primary_key=True, max_length=36)
+    task_id: str = Field(foreign_key="prediction_tasks.id", max_length=36)
+    item_index: int = Field(default=0)
+    messages: str = Field(default="")
