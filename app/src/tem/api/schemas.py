@@ -15,13 +15,18 @@ class SignInRequest(BaseModel):
     password: str
 
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: str
+
+
 class BalanceResponse(BaseModel):
     user_id: str
     balance: Decimal
 
 
 class TopUpRequest(BaseModel):
-    user_id: str
     amount: Decimal
 
 
@@ -36,7 +41,6 @@ class EvidenceItemIn(BaseModel):
 
 
 class PredictRequest(BaseModel):
-    user_id: str
     items: list[EvidenceItemIn]
     model_id: str | None = None  # не передали - берём первую активную
 
@@ -82,3 +86,24 @@ class TransactionEntry(BaseModel):
     type: str
     task_id: str | None
     created_at: datetime
+
+
+class PredictAccepted(BaseModel):
+    task_id: str
+    status: str  # всегда "queued" - обработка асинхронная
+
+
+class PredictionRecordOut(BaseModel):
+    item_index: int
+    title: str
+    primary_category: str
+    confidence: float
+    human_review_required: bool
+    worker_id: str
+
+
+class TaskResultResponse(BaseModel):
+    task_id: str
+    status: str
+    credits_charged: Decimal
+    records: list[PredictionRecordOut]
