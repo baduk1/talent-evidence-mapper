@@ -1,0 +1,14 @@
+body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 1rem; }
+nav { display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #ccc; padding-bottom: .5rem; margin-bottom: 1rem; }
+nav .nav-user { margin-left: auto; color: #555; }
+form.inline { display: inline; margin: 0; }
+form label { display: block; margin: .5rem 0; }
+input, textarea { width: 100%; box-sizing: border-box; }
+form.inline button { width: auto; }
+button { padding: .4rem 1rem; cursor: pointer; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: .4rem; text-align: left; }
+.flash { padding: .5rem; border-radius: 4px; }
+.flash.ok { background: #e6f4e6; }
+.flash.err { background: #fbe4e4; }
+.balance { font-size: 1.2rem; }

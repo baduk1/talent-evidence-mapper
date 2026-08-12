@@ -1,12 +1,14 @@
-"""REST API сервиса. Точка входа: uvicorn tem.main:app.
+"""Точка входа: uvicorn tem.main:app.
 
-Роутеры сгруппированы как в рекомендации к заданию: auth, balance, predict,
-history. На старте создаём таблицы и наполняем базу демо-данными
+Один процесс отдаёт и REST API (/api/...), и веб-интерфейс личного кабинета
+(Jinja2-страницы). На старте создаём таблицы и наполняем базу демо-данными
 (seed идемпотентный, так что перезапуски безопасны).
 """
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
 from .api.auth import auth_route
@@ -15,6 +17,7 @@ from .api.history import history_route
 from .api.predict import predict_route
 from .infrastructure.db.database import engine, init_db
 from .infrastructure.db.seed import seed
+from .web.routes import web_route
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ logger = logging.getLogger(__name__)
 def create_application() -> FastAPI:
     app = FastAPI(
         title="Talent Evidence Mapper",
-        version="0.3.0",
+        version="0.4.0",
         docs_url="/api/docs",
         redoc_url="/api/redoc",
     )
@@ -30,10 +33,12 @@ def create_application() -> FastAPI:
     app.include_router(balance_route, prefix="/api/balance", tags=["balance"])
     app.include_router(predict_route, prefix="/api/predict", tags=["predict"])
     app.include_router(history_route, prefix="/api/history", tags=["history"])
-
-    @app.get("/")
-    def root() -> dict:
-        return {"service": "talent-evidence-mapper", "status": "ok"}
+    app.include_router(web_route)
+    app.mount(
+        "/static",
+        StaticFiles(directory=Path(__file__).parent / "web" / "static"),
+        name="static",
+    )
 
     @app.get("/health")
     def health() -> dict:
