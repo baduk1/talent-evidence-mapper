@@ -92,3 +92,9 @@ def test_worker_marks_partial_batch_and_charges_only_valid(session):
     assert task.status == TaskStatus.PARTIALLY_COMPLETED
     assert task.credits_charged == Decimal("1")
     assert len(crud.list_records_for_task(session, message["task_id"])) == 1
+
+    # Причина отклонения сохранена - её покажет кабинет и API
+    errors = crud.list_item_errors_for_task(session, message["task_id"])
+    assert len(errors) == 1
+    assert errors[0].item_index == 1
+    assert "title is required" in errors[0].messages

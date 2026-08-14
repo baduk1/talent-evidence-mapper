@@ -53,13 +53,18 @@ def process_task(session: Session, message: dict) -> None:
     )
 
     valid: list[tuple[int, EvidenceItem]] = []
-    invalid_count = 0
+    invalid: list[tuple[int, list[str]]] = []
     for index, item_dict in enumerate(message["items"]):
         item = EvidenceItem(**item_dict)
-        if model.validate_input(item):
-            invalid_count += 1
+        messages = model.validate_input(item)
+        if messages:
+            invalid.append((index, messages))
         else:
             valid.append((index, item))
+
+    # Отклонённые items фиксируем с причинами - их видно в кабинете и в API.
+    for index, messages in invalid:
+        crud.create_item_error(session, task_id, index, "; ".join(messages))
 
     # Списываем только за валидные items. Не хватило средств - FAILED,
     # ничего не списано.
@@ -85,7 +90,7 @@ def process_task(session: Session, message: dict) -> None:
             worker_id=WORKER_ID,
         )
 
-    task_status = TaskStatus.COMPLETED if invalid_count == 0 else TaskStatus.PARTIALLY_COMPLETED
+    task_status = TaskStatus.COMPLETED if not invalid else TaskStatus.PARTIALLY_COMPLETED
     crud.finish_task(session, task_id, task_status, cost)
     logger.info(f"Task {task_id} processed by {WORKER_ID}: {task_status.value}, charged {cost}")
 

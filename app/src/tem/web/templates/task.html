@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Задача {{ task.id[:8] }}…</h1>
+<p>Статус: <strong>{{ task.status.value }}</strong>;
+   списано кредитов: {{ task.credits_charged }};
+   создана: {{ task.created_at.strftime("%Y-%m-%d %H:%M") }}</p>
+
+<h2>Обработанные достижения</h2>
+{% if records %}
+<table>
+  <tr><th>Название</th><th>Категория</th><th>Уверенность</th><th>Ревью человеком</th><th>Воркер</th></tr>
+  {% for record in records %}
+  <tr>
+    <td>{{ record.title }}</td>
+    <td>{{ record.primary_category }}</td>
+    <td>{{ record.confidence }}</td>
+    <td>{{ "да" if record.human_review_required else "нет" }}</td>
+    <td>{{ record.worker_id[:8] }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Пока нет результатов — если статус created, воркер ещё работает, обновите страницу.</p>
+{% endif %}
+
+<h2>Отклонённые данные</h2>
+{% if item_errors %}
+<ul>
+  {% for item_error in item_errors %}
+  <li>Элемент №{{ item_error.item_index + 1 }}: {{ item_error.messages }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>Отклонённых данных нет.</p>
+{% endif %}
+{% endblock %}

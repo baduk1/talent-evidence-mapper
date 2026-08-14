@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>История</h1>
+
+<h2>ML-запросы</h2>
+{% if tasks %}
+<table>
+  <tr><th>Дата</th><th>Статус</th><th>Списано кредитов</th><th></th></tr>
+  {% for task in tasks %}
+  <tr>
+    <td>{{ task.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+    <td>{{ task.status.value }}</td>
+    <td>{{ task.credits_charged }}</td>
+    <td><a href="/tasks/{{ task.id }}">подробнее</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Запросов пока не было.</p>
+{% endif %}
+
+<h2>Транзакции</h2>
+{% if transactions %}
+<table>
+  <tr><th>Дата</th><th>Тип</th><th>Сумма</th></tr>
+  {% for tx in transactions %}
+  <tr>
+    <td>{{ tx.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+    <td>{{ "пополнение" if tx.type.value == "credit" else "списание" }}</td>
+    <td>{{ tx.amount }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Операций пока не было.</p>
+{% endif %}
+{% endblock %}

@@ -107,3 +107,4 @@ class TaskResultResponse(BaseModel):
     status: str
     credits_charged: Decimal
     records: list[PredictionRecordOut]
+    invalid_items: list[InvalidItemOut] = []

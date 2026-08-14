@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Личный кабинет</h1>
+<p class="balance">Баланс: <strong>{{ user.balance }}</strong> кредитов</p>
+
+<h2>Пополнить баланс</h2>
+<form method="post" action="/topup">
+  <label>Сумма <input type="number" name="amount" min="1" step="1" value="10" required></label>
+  <button type="submit">Пополнить</button>
+</form>
+
+<h2>Новый ML-запрос</h2>
+<form method="post" action="/predict">
+  <label>Название достижения
+    <input type="text" name="title" required>
+  </label>
+  <label>Описание (минимум 40 символов)
+    <textarea name="description" rows="4" required></textarea>
+  </label>
+  <label>Ссылка на источник (необязательно)
+    <input type="url" name="source_url">
+  </label>
+  <button type="submit">Отправить на разметку</button>
+</form>
+<p>1 кредит списывается за каждое успешно обработанное достижение.
+   Ошибочные данные вернутся с пояснениями и не тарифицируются.</p>
+{% endblock %}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Talent Evidence Mapper{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav>
+  <a href="/">Главная</a>
+  {% if user %}
+    <a href="/cabinet">Кабинет</a>
+    <a href="/history">История</a>
+    <span class="nav-user">{{ user.email }}</span>
+    <form method="post" action="/logout" class="inline"><button>Выйти</button></form>
+  {% else %}
+    <a href="/login">Войти</a>
+    <a href="/signup">Регистрация</a>
+  {% endif %}
+</nav>
+{% if msg %}
+<p class="flash ok">
+  {% if msg == "registered" %}Регистрация завершена, добро пожаловать!
+  {% elif msg == "topup_ok" %}Баланс пополнен.
+  {% elif msg == "queued" %}Задача отправлена в обработку. Обновите страницу через пару секунд.
+  {% else %}{{ msg }}{% endif %}
+</p>
+{% endif %}
+{% if error %}
+<p class="flash err">
+  {% if error == "invalid_amount" %}Сумма должна быть положительной.
+  {% elif error == "email_taken" %}Пользователь с таким email уже существует.
+  {% elif error == "wrong_credentials" %}Неверный email или пароль.
+  {% elif error == "no_model" %}Нет доступных моделей.
+  {% else %}{{ error }}{% endif %}
+</p>
+{% endif %}
+<main>{% block content %}{% endblock %}</main>
+</body>
+</html>
