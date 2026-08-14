@@ -98,3 +98,21 @@ def test_worker_marks_partial_batch_and_charges_only_valid(session):
     assert len(errors) == 1
     assert errors[0].item_index == 1
     assert "title is required" in errors[0].messages
+
+
+
+def test_worker_all_invalid_batch_charges_nothing(session):
+    message = make_message(session, "10", [{"title": "", "description": "short"}])
+    process_task(session, message)
+    session.commit()
+
+    task = crud.get_task(session, message["task_id"])
+    assert task.status == TaskStatus.PARTIALLY_COMPLETED
+    assert task.credits_charged == 0
+
+    # Ни одной транзакции списания не появилось
+    txs = crud.list_transactions_for_user(session, message["user_id"])
+    assert [tx for tx in txs if tx.type == TransactionType.DEBIT] == []
+
+    # Причина отклонения сохранена
+    assert len(crud.list_item_errors_for_task(session, message["task_id"])) == 1

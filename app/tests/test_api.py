@@ -178,3 +178,12 @@ def test_history_endpoints_show_only_own_data(client, published):
     other_headers = auth_headers(client, email="other@b.com")
     assert client.get("/api/history/predictions", headers=other_headers).json() == []
     assert client.get("/api/history/transactions", headers=other_headers).json() == []
+
+
+def test_signin_twice_both_tokens_work(client):
+    signup(client)
+    first = client.post("/api/auth/signin", json={"email": "api@b.com", "password": "secret"})
+    second = client.post("/api/auth/signin", json={"email": "api@b.com", "password": "secret"})
+    for token in (first.json()["access_token"], second.json()["access_token"]):
+        headers = {"Authorization": f"Bearer {token}"}
+        assert client.get("/api/auth/me", headers=headers).status_code == 200
