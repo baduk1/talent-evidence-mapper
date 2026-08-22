@@ -1,27 +1,12 @@
 """Логика воркера без RabbitMQ: process_task напрямую на sqlite in-memory."""
 from decimal import Decimal
 
-import pytest
-from sqlmodel import SQLModel, Session, create_engine
-
 from tem.domain.enums import TaskStatus, TransactionType
 from tem.infrastructure.db import crud
-from tem.infrastructure.db.seed import seed
-from tem.infrastructure.db.models import MLModelORM
 
 import sys
 sys.path.insert(0, "../ml_worker")  # воркер живёт отдельным сервисом
 from main import process_task  # noqa: E402
-
-
-@pytest.fixture()
-def session():
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        seed(session)
-        session.commit()
-        yield session
 
 
 def make_message(session, balance: str, items: list[dict]) -> dict:
