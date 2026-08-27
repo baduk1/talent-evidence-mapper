@@ -33,6 +33,12 @@ def valid_item(title="OSS library") -> dict:
     }
 
 
+def test_metrics_endpoint_exposes_prometheus_format(client):
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    assert "http_requests_total" in response.text
+
+
 def test_signup_and_signin_returns_token(client):
     signup(client)
     response = client.post("/api/auth/signin", json={"email": "api@b.com", "password": "secret"})

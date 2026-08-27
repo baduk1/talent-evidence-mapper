@@ -27,14 +27,15 @@ services:
       - "443:443"
     restart: on-failure
 
-  # 3. Брокер сообщений. 5672 - AMQP, 15672 - веб-админка.
-  #    Данные на volume'е, чтобы очереди переживали перезапуск.
-  #    restart: on-failure - перезагружаться при сбоях.
+  # 3. Брокер сообщений. 5672 - AMQP, 15672 - веб-админка, 15692 -
+  #    prometheus-метрики очередей. Данные на volume'е, чтобы очереди
+  #    переживали перезапуск. restart: on-failure - перезагружаться при сбоях.
   rabbitmq:
-    image: rabbitmq:3.13-management
+    build: ./monitoring/rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
     volumes:
       - ./data/rabbitmq:/var/lib/rabbitmq
     restart: on-failure
@@ -63,4 +64,43 @@ services:
     depends_on:
       - database
       - rabbitmq
+    restart: on-failure
+
+  # 6. Telegram-бот (aiogram, asyncio). Третий интерфейс наравне с вебом
+  #    и REST: регистрация по telegram id, баланс, предсказания, история.
+  #    Нужен TELEGRAM_BOT_TOKEN в app/.env.
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    env_file:
+      - ./app/.env
+    volumes:
+      - ./app/src:/app/src
+    depends_on:
+      - database
+      - rabbitmq
+    restart: on-failure
+
+  # 7. Prometheus: собирает метрики приложения (/metrics) и RabbitMQ.
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: on-failure
+
+  # 8. Grafana: дашборд поверх Prometheus (admin/admin, провижининг из
+  #    monitoring/grafana/provisioning).
+  grafana:
+    image: grafana/grafana:11.2.2
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
     restart: on-failure

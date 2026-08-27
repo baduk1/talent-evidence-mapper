@@ -9,6 +9,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlmodel import Session
 
 from .api.auth import auth_route
@@ -43,6 +44,9 @@ def create_application() -> FastAPI:
     @app.get("/health")
     def health() -> dict:
         return {"status": "healthy"}
+
+    # Технические метрики (RPS, латентность, коды) для Prometheus.
+    Instrumentator().instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
 
     return app
 
