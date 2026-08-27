@@ -7,6 +7,7 @@ from ..infrastructure.db import crud
 from ..infrastructure.db.database import get_session
 from ..infrastructure.db.models import MLModelORM, UserORM
 from ..infrastructure.mq import send_task
+from ..monitoring import PREDICTIONS_TOTAL
 from .schemas import (
     InvalidItemOut,
     PredictAccepted,
@@ -30,7 +31,7 @@ def predict(
     if data.model_id is not None:
         model_orm = session.get(MLModelORM, data.model_id)
     else:
-        model_orm = next(iter(crud.list_active_models(session)), None)
+        model_orm = crud.get_default_model(session)
     if model_orm is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Модель не найдена")
 
@@ -45,6 +46,7 @@ def predict(
             "items": [item.model_dump() for item in data.items],
         }
     )
+    PREDICTIONS_TOTAL.inc()
     return PredictAccepted(task_id=task.id, status="queued")
 
 

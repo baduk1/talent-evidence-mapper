@@ -45,6 +45,16 @@ def list_active_models(session: Session) -> list[MLModelORM]:
     return list(session.exec(select(MLModelORM).where(MLModelORM.active.is_(True))))
 
 
+def get_default_model(session: Session) -> MLModelORM | None:
+    """Модель для новых задач: боевая zero-shot (mDeBERTa), иначе любая
+    активная. Порядок строк в БД не гарантирован, поэтому выбираем по имени."""
+    models = list_active_models(session)
+    for model in models:
+        if "mdeberta" in model.name.lower():
+            return model
+    return next(iter(models), None)
+
+
 def add_transaction(
     session: Session,
     user_id: str,
@@ -64,6 +74,17 @@ def list_transactions_for_user(session: Session, user_id: str) -> list[Transacti
         .where(TransactionORM.user_id == user_id)
         .order_by(TransactionORM.created_at.desc())
     )
+    return list(session.exec(stmt))
+
+
+def list_users(session: Session) -> list[UserORM]:
+    """Все пользователи для админ-панели."""
+    return list(session.exec(select(UserORM).order_by(UserORM.email)))
+
+
+def list_all_transactions(session: Session, limit: int = 300) -> list[TransactionORM]:
+    """Все транзакции системы для админки, новые сверху."""
+    stmt = select(TransactionORM).order_by(TransactionORM.created_at.desc()).limit(limit)
     return list(session.exec(stmt))
 
 
@@ -137,6 +158,8 @@ def create_prediction_record(
     confidence: float,
     human_review_required: bool,
     worker_id: str,
+    secondary: list | None = None,
+    missing_information: list | None = None,
 ) -> PredictionRecordORM:
     record = PredictionRecordORM(
         task_id=task_id,
@@ -146,6 +169,8 @@ def create_prediction_record(
         confidence=confidence,
         human_review_required=human_review_required,
         worker_id=worker_id,
+        secondary=secondary or [],
+        missing_information=missing_information or [],
     )
     session.add(record)
     session.flush()

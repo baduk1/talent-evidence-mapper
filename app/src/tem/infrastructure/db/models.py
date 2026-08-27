@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from sqlalchemy import Column
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Numeric
+from sqlalchemy import JSON, Numeric
 from sqlmodel import Field, SQLModel
 
 from ...domain.enums import TaskStatus, TransactionType, UserRole
@@ -75,6 +75,10 @@ class PredictionRecordORM(SQLModel, table=True):
     title: str = Field(max_length=255)
     primary_category: str = Field(max_length=64)
     confidence: float = Field(default=0.0)
+    # Запасные категории и недостающие данные: полный ответ доменной модели,
+    # а не только топ-1. JSON-списки: [{"category", "confidence"}], [str].
+    secondary: list = Field(default_factory=list, sa_column=Column(JSON))
+    missing_information: list = Field(default_factory=list, sa_column=Column(JSON))
     human_review_required: bool = Field(default=True)
     worker_id: str = Field(max_length=64)  # кто обработал - видно распределение
     created_at: datetime = Field(default_factory=_now)
