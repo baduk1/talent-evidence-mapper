@@ -7,6 +7,7 @@ from sqlmodel import Session
 from ..infrastructure.db import crud
 from ..infrastructure.db.database import get_session
 from ..infrastructure.db.models import UserORM
+from ..monitoring import SIGNUPS_TOTAL
 from .schemas import SignInRequest, SignUpRequest, TokenResponse
 from .security import create_access_token, get_current_user
 
@@ -27,6 +28,7 @@ def signup(data: SignUpRequest, session: Session = Depends(get_session)) -> dict
         )
     user = crud.create_user(session, data.email, _hash_password(data.password))
     session.commit()
+    SIGNUPS_TOTAL.inc()
     return {"message": "Пользователь зарегистрирован", "user_id": user.id}
 
 

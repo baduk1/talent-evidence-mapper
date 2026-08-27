@@ -11,7 +11,7 @@ from main import process_task  # noqa: E402
 
 def make_message(session, balance: str, items: list[dict]) -> dict:
     user = crud.create_user(session, "w@b.com", "h", balance=Decimal(balance))
-    model = crud.list_active_models(session)[0]
+    model = crud.get_default_model(session)
     task = crud.create_task(session, user.id, model.id)
     session.flush()
     return {
@@ -48,6 +48,8 @@ def test_worker_processes_task_and_charges(session):
     assert len(records) == 1
     assert records[0].primary_category
     assert records[0].worker_id  # видно, кто обработал
+    assert len(records[0].secondary) == 2  # запасные категории сохранены
+    assert len(records[0].missing_information) == 2  # нет метрик и URL
 
     user = crud.get_user_by_id(session, message["user_id"])
     assert user.balance == Decimal("9")

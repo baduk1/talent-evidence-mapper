@@ -1,37 +1,53 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>История</h1>
+<h1>{{ s.history_title }}</h1>
 
-<h2>ML-запросы</h2>
-{% if tasks %}
-<table>
-  <tr><th>Дата</th><th>Статус</th><th>Списано кредитов</th><th></th></tr>
-  {% for task in tasks %}
-  <tr>
-    <td>{{ task.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
-    <td>{{ task.status.value }}</td>
-    <td>{{ task.credits_charged }}</td>
-    <td><a href="/tasks/{{ task.id }}">подробнее</a></td>
-  </tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>Запросов пока не было.</p>
-{% endif %}
+<section class="card">
+  <h2>{{ s.tasks_title }}</h2>
+  {% if tasks %}
+  <table class="table">
+    <thead>
+      <tr><th>{{ s.col_date }}</th><th>{{ s.col_status }}</th><th>{{ s.col_charged }}</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td><span class="badge st-{{ task.status.value }}">{{ s.statuses[task.status.value] }}</span></td>
+        <td>{{ task.credits_charged }}</td>
+        <td><a href="/tasks/{{ task.id }}">{{ s.details }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ s.no_tasks }}</p>
+  {% endif %}
+</section>
 
-<h2>Транзакции</h2>
-{% if transactions %}
-<table>
-  <tr><th>Дата</th><th>Тип</th><th>Сумма</th></tr>
-  {% for tx in transactions %}
-  <tr>
-    <td>{{ tx.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
-    <td>{{ "пополнение" if tx.type.value == "credit" else "списание" }}</td>
-    <td>{{ tx.amount }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>Операций пока не было.</p>
-{% endif %}
+<section class="card">
+  <h2>{{ s.tx_title }}</h2>
+  {% if transactions %}
+  <table class="table">
+    <thead>
+      <tr><th>{{ s.col_date }}</th><th>{{ s.col_type }}</th><th>{{ s.amount }}</th></tr>
+    </thead>
+    <tbody>
+      {% for tx in transactions %}
+      <tr>
+        <td>{{ tx.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>
+          <span class="badge tx-{{ tx.type.value }}">
+            {{ s.type_credit if tx.type.value == "credit" else s.type_debit }}
+          </span>
+        </td>
+        <td>{{ tx.amount }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ s.no_tx }}</p>
+  {% endif %}
+</section>
 {% endblock %}

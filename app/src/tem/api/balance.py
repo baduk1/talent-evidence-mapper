@@ -6,6 +6,7 @@ from ..domain.exceptions import InvalidAmountError
 from ..infrastructure.db import crud
 from ..infrastructure.db.database import get_session
 from ..infrastructure.db.models import UserORM
+from ..monitoring import TOPUPS_TOTAL
 from .schemas import BalanceResponse, TopUpRequest
 from .security import get_current_user
 
@@ -33,4 +34,5 @@ def top_up(
             detail=str(error),
         )
     session.commit()
+    TOPUPS_TOTAL.inc()
     return BalanceResponse(user_id=user.id, balance=balance)

@@ -29,6 +29,37 @@ logger = logging.getLogger(__name__)
 
 WORKER_ID = socket.gethostname()  # в docker это id контейнера - различим воркеров
 
+try:
+    import transformers  # noqa: F401
+
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+
+
+def build_classifier(model_orm: MLModelORM):
+    """Движок под модель из каталога.
+
+    mDeBERTa - настоящий zero-shot с HuggingFace. Если transformers не
+    установлен (юнит-тесты без ML-зависимостей), деградируем в keyword
+    с предупреждением в лог.
+    """
+    kwargs = dict(
+        model_id=model_orm.id,
+        name=model_orm.name,
+        description="",
+        version=model_orm.version,
+        credit_cost=model_orm.credit_cost,
+    )
+    if "mdeberta" in model_orm.name.lower():
+        try:
+            from tem.domain.evidence import HuggingFaceEvidenceClassifierModel
+
+            return HuggingFaceEvidenceClassifierModel(**kwargs)
+        except ImportError:
+            logger.warning("transformers не установлен - задача уйдёт в keyword-модель")
+    return KeywordEvidenceClassifierModel(**kwargs)
+
 
 def process_task(session: Session, message: dict) -> None:
     """Вся обработка одной задачи: валидация, списание, предикт, запись."""
@@ -44,13 +75,7 @@ def process_task(session: Session, message: dict) -> None:
         return
 
     # Правила валидации и предсказания берём из домена, не дублируем.
-    model = KeywordEvidenceClassifierModel(
-        model_id=model_orm.id,
-        name=model_orm.name,
-        description="",
-        version=model_orm.version,
-        credit_cost=model_orm.credit_cost,
-    )
+    model = build_classifier(model_orm)
 
     valid: list[tuple[int, EvidenceItem]] = []
     invalid: list[tuple[int, list[str]]] = []
@@ -88,6 +113,11 @@ def process_task(session: Session, message: dict) -> None:
             confidence=mapping.primary.confidence,
             human_review_required=mapping.human_review_required,
             worker_id=WORKER_ID,
+            secondary=[
+                {"category": score.category.value, "confidence": score.confidence}
+                for score in mapping.secondary
+            ],
+            missing_information=list(mapping.missing_information),
         )
 
     task_status = TaskStatus.COMPLETED if not invalid else TaskStatus.PARTIALLY_COMPLETED
@@ -132,7 +162,8 @@ def main() -> None:
     channel.basic_qos(prefetch_count=1)  # честное распределение между воркерами
     channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback, auto_ack=False)
 
-    logger.info(f"Worker {WORKER_ID} is waiting for messages. To exit, press Ctrl+C")
+    engine_note = "mDeBERTa zero-shot" if TRANSFORMERS_AVAILABLE else "keyword fallback (no transformers)"
+    logger.info(f"Worker {WORKER_ID} is waiting for messages, engine: {engine_note}")
     channel.start_consuming()
 
 

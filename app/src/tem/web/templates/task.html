@@ -1,36 +1,87 @@
 {% extends "base.html" %}
+{% block head_extra %}
+  {% if task.status.value in ["created", "validating", "processing"] %}
+  <meta http-equiv="refresh" content="3">
+  {% endif %}
+{% endblock %}
 {% block content %}
-<h1>Задача {{ task.id[:8] }}…</h1>
-<p>Статус: <strong>{{ task.status.value }}</strong>;
-   списано кредитов: {{ task.credits_charged }};
-   создана: {{ task.created_at.strftime("%Y-%m-%d %H:%M") }}</p>
+<h1>{{ s.task_title }} <span class="task-id">{{ task.id[:8] }}</span></h1>
 
-<h2>Обработанные достижения</h2>
-{% if records %}
-<table>
-  <tr><th>Название</th><th>Категория</th><th>Уверенность</th><th>Ревью человеком</th><th>Воркер</th></tr>
-  {% for record in records %}
-  <tr>
-    <td>{{ record.title }}</td>
-    <td>{{ record.primary_category }}</td>
-    <td>{{ record.confidence }}</td>
-    <td>{{ "да" if record.human_review_required else "нет" }}</td>
-    <td>{{ record.worker_id[:8] }}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% else %}
-<p>Пока нет результатов — если статус created, воркер ещё работает, обновите страницу.</p>
-{% endif %}
+<section class="card task-meta">
+  <div class="meta-item">
+    <span class="meta-label">{{ s.col_status }}</span>
+    <span class="badge st-{{ task.status.value }}">{{ s.statuses[task.status.value] }}</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">{{ s.col_charged }}</span>
+    <span class="meta-value">{{ task.credits_charged }}</span>
+  </div>
+  <div class="meta-item">
+    <span class="meta-label">{{ s.created_label }}</span>
+    <span class="meta-value">{{ task.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+  </div>
+</section>
 
-<h2>Отклонённые данные</h2>
-{% if item_errors %}
-<ul>
-  {% for item_error in item_errors %}
-  <li>Элемент №{{ item_error.item_index + 1 }}: {{ item_error.messages }}</li>
-  {% endfor %}
-</ul>
-{% else %}
-<p>Отклонённых данных нет.</p>
-{% endif %}
+<section class="card">
+  <h2>{{ s.records_title }}</h2>
+  {% if records %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ s.col_title }}</th><th>{{ s.col_category }}</th>
+        <th>{{ s.col_confidence }}</th><th>{{ s.col_review }}</th><th>{{ s.col_worker }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+      <tr>
+        <td>
+          {{ record.title }}
+          {% if record.missing_information %}
+          <div class="missing-info">
+            {{ s.missing_label }}:
+            {% for msg in record.missing_information %}
+              {{ s.domain_msgs.get(msg, msg) }}{{ ", " if not loop.last }}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </td>
+        <td>
+          <span class="chip">{{ s.categories.get(record.primary_category, record.primary_category) }}</span>
+          {% if record.secondary %}
+          <div class="sub-cats">
+            {% for alt in record.secondary %}
+              {{ s.categories.get(alt.category, alt.category) }} {{ "%.0f%%"|format(alt.confidence * 100) }}{{ ", " if not loop.last }}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </td>
+        <td>{{ "%.0f%%"|format(record.confidence * 100) }}</td>
+        <td>{{ s.yes if record.human_review_required else s.no }}</td>
+        <td class="mono">{{ record.worker_id[:8] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    {% if task.status.value == "failed" %}
+  <p class="flash flash-err">{{ s.failed_hint }}</p>
+    {% else %}
+  <p class="muted">{{ s.no_records }}</p>
+    {% endif %}
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ s.rejected_title }}</h2>
+  {% if item_errors %}
+  <ul class="error-list">
+    {% for item_error in item_errors %}
+    <li><strong>{{ s.item_prefix }} {{ item_error.item_index + 1 }}:</strong> {{ item_error.messages }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{{ s.no_rejected }}</p>
+  {% endif %}
+</section>
 {% endblock %}

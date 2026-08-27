@@ -1,27 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Личный кабинет</h1>
-<p class="balance">Баланс: <strong>{{ user.balance }}</strong> кредитов</p>
+<h1>{{ s.cabinet_title }}</h1>
 
-<h2>Пополнить баланс</h2>
-<form method="post" action="/topup">
-  <label>Сумма <input type="number" name="amount" min="1" step="1" value="10" required></label>
-  <button type="submit">Пополнить</button>
-</form>
+<div class="grid">
+  <section class="card balance-card">
+    <p class="balance-label">{{ s.balance_label }}</p>
+    <p class="balance-value">{{ user.balance }} <span>{{ s.credits_unit }}</span></p>
+    <form method="post" action="/topup" class="form form-row">
+      <label class="field">
+        <span class="field-label">{{ s.amount }}</span>
+        <input type="number" name="amount" min="1" step="1" value="10" required>
+      </label>
+      <button class="btn btn-primary" type="submit">{{ s.topup_btn }}</button>
+    </form>
+  </section>
 
-<h2>Новый ML-запрос</h2>
-<form method="post" action="/predict">
-  <label>Название достижения
-    <input type="text" name="title" required>
-  </label>
-  <label>Описание (минимум 40 символов)
-    <textarea name="description" rows="4" required></textarea>
-  </label>
-  <label>Ссылка на источник (необязательно)
-    <input type="url" name="source_url">
-  </label>
-  <button type="submit">Отправить на разметку</button>
-</form>
-<p>1 кредит списывается за каждое успешно обработанное достижение.
-   Ошибочные данные вернутся с пояснениями и не тарифицируются.</p>
+  <section class="card">
+    <h2>{{ s.predict_title }}</h2>
+    <form method="post" action="/predict" class="form">
+      <label class="field">
+        <span class="field-label">{{ s.field_title }}</span>
+        <input type="text" name="title" required>
+      </label>
+      <label class="field">
+        <span class="field-label">{{ s.field_description }}</span>
+        <textarea name="description" rows="5" required></textarea>
+      </label>
+      <label class="field">
+        <span class="field-label">{{ s.field_source }}</span>
+        <input type="url" name="source_url">
+      </label>
+      <button class="btn btn-primary" type="submit">{{ s.predict_btn }}</button>
+    </form>
+    <p class="note">{{ s.tariff_note }}</p>
+  </section>
+</div>
 {% endblock %}

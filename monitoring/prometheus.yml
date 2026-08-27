@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  # FastAPI-приложение: HTTP-метрики + бизнес-счётчики (tem_*)
+  - job_name: tem-app
+    static_configs:
+      - targets: ["app:8000"]
+
+  # RabbitMQ: глубина очередей, сообщения, соединения (порт плагина prometheus)
+  - job_name: rabbitmq
+    static_configs:
+      - targets: ["rabbitmq:15692"]

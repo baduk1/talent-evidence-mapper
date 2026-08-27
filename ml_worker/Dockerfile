@@ -7,6 +7,10 @@ WORKDIR /app
 COPY ml_worker/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Веса mDeBERTa (~1 ГБ) скачиваем при сборке: слой кэшируется, а контейнер
+# стартует и работает без доступа в интернет.
+RUN python -c "from transformers import pipeline; pipeline('zero-shot-classification', model='MoritzLaurer/mDeBERTa-v3-base-mnli-xnli')"
+
 COPY app/src /app/src
 COPY ml_worker/main.py /app/main.py
 

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ s.admin_tx_link }}</h1>
+
+<section class="card">
+  {% if transactions %}
+  <table class="table">
+    <thead>
+      <tr><th>{{ s.col_date }}</th><th>{{ s.col_user }}</th><th>{{ s.col_type }}</th><th>{{ s.amount }}</th></tr>
+    </thead>
+    <tbody>
+      {% for tx in transactions %}
+      <tr>
+        <td>{{ tx.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        <td>{{ users_by_id.get(tx.user_id, tx.user_id[:8]) }}</td>
+        <td>
+          <span class="badge tx-{{ tx.type.value }}">
+            {{ s.type_credit if tx.type.value == "credit" else s.type_debit }}
+          </span>
+        </td>
+        <td>{{ tx.amount }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ s.no_tx }}</p>
+  {% endif %}
+</section>
+{% endblock %}

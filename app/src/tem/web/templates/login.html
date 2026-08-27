@@ -1,10 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Вход</h1>
-<form method="post" action="/login">
-  <label>Email <input type="email" name="email" required></label>
-  <label>Пароль <input type="password" name="password" required></label>
-  <button type="submit">Войти</button>
-</form>
-<p>Нет аккаунта? <a href="/signup">Зарегистрироваться</a></p>
+<div class="auth-wrap">
+  <section class="card auth-card">
+    <h1>{{ s.login_title }}</h1>
+    <form method="post" action="/login" class="form">
+      <label class="field">
+        <span class="field-label">{{ s.email }}</span>
+        <input type="email" name="email" required>
+      </label>
+      <label class="field">
+        <span class="field-label">{{ s.password }}</span>
+        <input type="password" name="password" required>
+      </label>
+      <button class="btn btn-primary btn-block" type="submit">{{ s.login_btn }}</button>
+    </form>
+    <p class="auth-alt">{{ s.no_account }} <a href="/signup">{{ s.signup_btn }}</a></p>
+  </section>
+</div>
 {% endblock %}
