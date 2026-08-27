@@ -1,43 +1,4 @@
-import os
-
-# До любых импортов tem: подменяем БД на in-memory, чтобы startup-хук
-# не трогал ни файл, ни Postgres.
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-
 import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.pool import StaticPool
-from sqlmodel import SQLModel, Session, create_engine
-
-from tem.infrastructure.db import crud
-from tem.infrastructure.db.database import get_session
-from tem.infrastructure.db.seed import seed
-from tem.main import app
-
-
-@pytest.fixture()
-def session():
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        seed(session)
-        session.commit()
-        yield session
-
-
-@pytest.fixture()
-def client(session):
-    def get_test_session():
-        yield session
-
-    app.dependency_overrides[get_session] = get_test_session
-    with TestClient(app) as client:
-        yield client
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture()
@@ -178,3 +139,12 @@ def test_history_endpoints_show_only_own_data(client, published):
     other_headers = auth_headers(client, email="other@b.com")
     assert client.get("/api/history/predictions", headers=other_headers).json() == []
     assert client.get("/api/history/transactions", headers=other_headers).json() == []
+
+
+def test_signin_twice_both_tokens_work(client):
+    signup(client)
+    first = client.post("/api/auth/signin", json={"email": "api@b.com", "password": "secret"})
+    second = client.post("/api/auth/signin", json={"email": "api@b.com", "password": "secret"})
+    for token in (first.json()["access_token"], second.json()["access_token"]):
+        headers = {"Authorization": f"Bearer {token}"}
+        assert client.get("/api/auth/me", headers=headers).status_code == 200

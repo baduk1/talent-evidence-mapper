@@ -1,27 +1,12 @@
 """Логика воркера без RabbitMQ: process_task напрямую на sqlite in-memory."""
 from decimal import Decimal
 
-import pytest
-from sqlmodel import SQLModel, Session, create_engine
-
 from tem.domain.enums import TaskStatus, TransactionType
 from tem.infrastructure.db import crud
-from tem.infrastructure.db.seed import seed
-from tem.infrastructure.db.models import MLModelORM
 
 import sys
 sys.path.insert(0, "../ml_worker")  # воркер живёт отдельным сервисом
 from main import process_task  # noqa: E402
-
-
-@pytest.fixture()
-def session():
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        seed(session)
-        session.commit()
-        yield session
 
 
 def make_message(session, balance: str, items: list[dict]) -> dict:
@@ -98,3 +83,21 @@ def test_worker_marks_partial_batch_and_charges_only_valid(session):
     assert len(errors) == 1
     assert errors[0].item_index == 1
     assert "title is required" in errors[0].messages
+
+
+
+def test_worker_all_invalid_batch_charges_nothing(session):
+    message = make_message(session, "10", [{"title": "", "description": "short"}])
+    process_task(session, message)
+    session.commit()
+
+    task = crud.get_task(session, message["task_id"])
+    assert task.status == TaskStatus.PARTIALLY_COMPLETED
+    assert task.credits_charged == 0
+
+    # Ни одной транзакции списания не появилось
+    txs = crud.list_transactions_for_user(session, message["user_id"])
+    assert [tx for tx in txs if tx.type == TransactionType.DEBIT] == []
+
+    # Причина отклонения сохранена
+    assert len(crud.list_item_errors_for_task(session, message["task_id"])) == 1

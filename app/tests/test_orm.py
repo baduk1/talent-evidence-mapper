@@ -1,19 +1,10 @@
 from decimal import Decimal
 
 import pytest
-from sqlmodel import SQLModel, Session, create_engine
 
 from tem.domain.exceptions import InsufficientBalanceError
 from tem.infrastructure.db import crud
 from tem.infrastructure.db.seed import seed
-
-
-@pytest.fixture()
-def session():
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
-        yield session
 
 
 def test_create_and_load_user(session):
