@@ -1,3 +1,4 @@
+import hashlib
 from decimal import Decimal
 
 from sqlmodel import Session
@@ -16,15 +17,17 @@ def seed(session: Session) -> None:
             role=UserRole.USER, balance=Decimal("20"),
         )
     if crud.get_user_by_email(session, "admin@example.com") is None:
+        # Демо-доступ админа (admin@example.com / admin123) - только для курса.
         crud.create_user(
-            session, "admin@example.com", "demo-hash",
+            session, "admin@example.com",
+            hashlib.sha256("admin123".encode()).hexdigest(),
             role=UserRole.ADMIN, balance=Decimal("0"),
         )
 
     existing = {(model.name, model.version) for model in crud.list_active_models(session)}
     catalog = [
-        ("Keyword evidence classifier", "0.1", Decimal("1")),
         ("mDeBERTa zero-shot classifier", "0.1", Decimal("1")),
+        ("Keyword evidence classifier", "0.1", Decimal("1")),
     ]
     for name, version, cost in catalog:
         if (name, version) not in existing:

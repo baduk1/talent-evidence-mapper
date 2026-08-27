@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ s.admin_title }}</h1>
+
+<section class="card">
+  <h2>{{ s.admin_topup_title }}</h2>
+  <form method="post" action="/admin/topup" class="form form-row">
+    <label class="field">
+      <span class="field-label">{{ s.col_email }}</span>
+      <input type="email" name="email" required>
+    </label>
+    <label class="field">
+      <span class="field-label">{{ s.amount }}</span>
+      <input type="number" name="amount" min="1" step="1" value="10" required>
+    </label>
+    <button class="btn btn-primary" type="submit">{{ s.topup_btn }}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{ s.admin_users_title }}</h2>
+  <table class="table">
+    <thead>
+      <tr><th>{{ s.col_email }}</th><th>{{ s.col_role }}</th><th>{{ s.col_balance }}</th></tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr>
+        <td>{{ u.email }}</td>
+        <td><span class="badge {{ 'st-completed' if u.role.value == 'admin' else 'st-created' }}">{{ u.role.value }}</span></td>
+        <td>{{ u.balance }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <a href="/admin/transactions">{{ s.admin_tx_link }} &rarr;</a>
+</section>
+{% endblock %}
