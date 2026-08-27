@@ -1,21 +1,36 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Talent Evidence Mapper</h1>
-<p>Сервис размечает описания профессиональных достижений по категориям:
-инновации, признание лидерства, значимый и академический вклад, активность
-вне работы. Машина не принимает решений — она структурирует материал
-для живого ревью.</p>
-<p>Как это работает:</p>
-<ul>
-  <li>регистрируетесь и получаете кредитный баланс;</li>
-  <li>отправляете одно или несколько достижений текстом;</li>
-  <li>сервис валидирует данные, списывает кредиты только за обработанные
-      достижения и возвращает категории с уверенностью;</li>
-  <li>история всех запросов и списаний всегда доступна в личном кабинете.</li>
-</ul>
-{% if not user %}
-<p><a href="/signup">Зарегистрироваться</a> или <a href="/login">войти</a></p>
-{% else %}
-<p><a href="/cabinet">Перейти в кабинет</a></p>
-{% endif %}
+<section class="hero card">
+  <h1>Talent Evidence Mapper</h1>
+  <p class="lead">{{ s.hero_sub }}</p>
+  <div class="hero-actions">
+    {% if not user %}
+      <a class="btn btn-primary" href="/signup">{{ s.cta_signup }}</a>
+      <a class="btn btn-ghost" href="/login">{{ s.cta_login }}</a>
+    {% else %}
+      <a class="btn btn-primary" href="/cabinet">{{ s.cta_cabinet }}</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>{{ s.how_title }}</h2>
+  <ol class="steps">
+    <li>{{ s.how_1 }}</li>
+    <li>{{ s.how_2 }}</li>
+    <li>{{ s.how_3 }}</li>
+    <li>{{ s.how_4 }}</li>
+  </ol>
+</section>
+
+<section class="card">
+  <h2>{{ s.categories_title }}</h2>
+  <div class="chips">
+    <span class="chip">{{ s.categories["innovation"] }}</span>
+    <span class="chip">{{ s.categories["recognition_leader"] }}</span>
+    <span class="chip">{{ s.categories["significant_contribution"] }}</span>
+    <span class="chip">{{ s.categories["academic_contribution"] }}</span>
+    <span class="chip">{{ s.categories["outside_work"] }}</span>
+  </div>
+</section>
 {% endblock %}

@@ -1,40 +1,65 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Talent Evidence Mapper{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
+  {% block head_extra %}{% endblock %}
 </head>
 <body>
-<nav>
-  <a href="/">Главная</a>
-  {% if user %}
-    <a href="/cabinet">Кабинет</a>
-    <a href="/history">История</a>
-    <span class="nav-user">{{ user.email }}</span>
-    <form method="post" action="/logout" class="inline"><button>Выйти</button></form>
-  {% else %}
-    <a href="/login">Войти</a>
-    <a href="/signup">Регистрация</a>
+<header class="nav">
+  <a class="brand" href="/">
+    <span class="brand-mark">TEM</span>
+    <span class="brand-name">Talent Evidence Mapper</span>
+  </a>
+  <nav class="nav-links">
+    <a href="/">{{ s.nav_home }}</a>
+    {% if user %}
+      <a href="/cabinet">{{ s.nav_cabinet }}</a>
+      <a href="/history">{{ s.nav_history }}</a>
+      {% if user.role.value == "admin" %}
+      <a href="/admin">{{ s.nav_admin }}</a>
+      {% endif %}
+    {% endif %}
+  </nav>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <a href="/lang/ru" class="{{ 'active' if lang == 'ru' }}">RU</a><span class="lang-sep"></span><a href="/lang/en" class="{{ 'active' if lang == 'en' }}">EN</a>
+    </div>
+    {% if user %}
+      <span class="nav-user">{{ user.email }}</span>
+      <form method="post" action="/logout" class="inline">
+        <button class="btn btn-ghost btn-sm" type="submit">{{ s.nav_logout }}</button>
+      </form>
+    {% else %}
+      <a class="btn btn-ghost btn-sm" href="/login">{{ s.nav_login }}</a>
+      <a class="btn btn-primary btn-sm" href="/signup">{{ s.nav_signup }}</a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="page">
+  {% if msg %}
+  <div class="flash flash-ok">
+    {% if msg == "registered" %}{{ s.msg_registered }}
+    {% elif msg == "topup_ok" %}{{ s.msg_topup_ok }}
+    {% elif msg == "queued" %}{{ s.msg_queued }}
+    {% else %}{{ msg }}{% endif %}
+  </div>
   {% endif %}
-</nav>
-{% if msg %}
-<p class="flash ok">
-  {% if msg == "registered" %}Регистрация завершена, добро пожаловать!
-  {% elif msg == "topup_ok" %}Баланс пополнен.
-  {% elif msg == "queued" %}Задача отправлена в обработку. Обновите страницу через пару секунд.
-  {% else %}{{ msg }}{% endif %}
-</p>
-{% endif %}
-{% if error %}
-<p class="flash err">
-  {% if error == "invalid_amount" %}Сумма должна быть положительной.
-  {% elif error == "email_taken" %}Пользователь с таким email уже существует.
-  {% elif error == "wrong_credentials" %}Неверный email или пароль.
-  {% elif error == "no_model" %}Нет доступных моделей.
-  {% else %}{{ error }}{% endif %}
-</p>
-{% endif %}
-<main>{% block content %}{% endblock %}</main>
+  {% if error %}
+  <div class="flash flash-err">
+    {% if error == "invalid_amount" %}{{ s.err_invalid_amount }}
+    {% elif error == "email_taken" %}{{ s.err_email_taken }}
+    {% elif error == "wrong_credentials" %}{{ s.err_wrong_credentials }}
+    {% elif error == "no_model" %}{{ s.err_no_model }}
+    {% elif error == "no_user" %}{{ s.err_no_user }}
+    {% else %}{{ error }}{% endif %}
+  </div>
+  {% endif %}
+
+  <main>{% block content %}{% endblock %}</main>
+</div>
 </body>
 </html>

@@ -1,0 +1,258 @@
+"""Строки веб-интерфейса и выбор языка.
+
+Язык хранится в cookie tem_lang (ru по умолчанию). Переключение - через
+GET /lang/{code}, который ставит cookie и возвращает на ту же страницу.
+"""
+
+LANG_COOKIE = "tem_lang"
+DEFAULT_LANG = "ru"
+SUPPORTED_LANGS = ("ru", "en")
+
+STRINGS = {
+    "ru": {
+        # Навигация и флеши
+        "nav_home": "Главная",
+        "nav_cabinet": "Кабинет",
+        "nav_history": "История",
+        "nav_login": "Войти",
+        "nav_signup": "Регистрация",
+        "nav_logout": "Выйти",
+        "nav_admin": "Админ",
+        "admin_title": "Администрирование",
+        "admin_users_title": "Пользователи",
+        "admin_topup_title": "Пополнить баланс пользователя",
+        "admin_tx_link": "Все транзакции",
+        "col_email": "Email",
+        "col_role": "Роль",
+        "col_balance": "Баланс",
+        "col_user": "Пользователь",
+        "err_no_user": "Пользователь не найден.",
+        "msg_registered": "Регистрация завершена, добро пожаловать!",
+        "msg_topup_ok": "Баланс пополнен.",
+        "msg_queued": "Задача отправлена в обработку, страница обновится автоматически.",
+        "err_invalid_amount": "Сумма должна быть положительной.",
+        "err_email_taken": "Пользователь с таким email уже существует.",
+        "err_wrong_credentials": "Неверный email или пароль.",
+        "err_no_model": "Нет доступных моделей.",
+        # Главная
+        "hero_sub": "Платформа структурирует описания профессиональных достижений: "
+                    "zero-shot классификатор mDeBERTa относит каждое достижение к одной "
+                    "из пяти категорий и оценивает уверенность. Модель не принимает "
+                    "решений, она готовит материал для экспертного ревью.",
+        "how_title": "Как это работает",
+        "how_1": "Зарегистрируйтесь и получите кредитный баланс.",
+        "how_2": "Отправьте одно или несколько достижений текстом.",
+        "how_3": "Сервис валидирует данные, обрабатывает валидные и возвращает "
+                 "категории с уверенностью модели.",
+        "how_4": "Кредиты списываются только за успешно обработанные достижения, "
+                 "история операций всегда доступна в кабинете.",
+        "categories_title": "Категории классификации",
+        "cta_signup": "Создать аккаунт",
+        "cta_login": "Войти",
+        "cta_cabinet": "Перейти в кабинет",
+        # Авторизация
+        "login_title": "Вход в аккаунт",
+        "signup_title": "Регистрация",
+        "email": "Email",
+        "password": "Пароль",
+        "login_btn": "Войти",
+        "signup_btn": "Зарегистрироваться",
+        "no_account": "Нет аккаунта?",
+        "have_account": "Уже есть аккаунт?",
+        # Кабинет
+        "cabinet_title": "Личный кабинет",
+        "balance_label": "Текущий баланс",
+        "credits_unit": "кредитов",
+        "topup_title": "Пополнить баланс",
+        "amount": "Сумма",
+        "topup_btn": "Пополнить",
+        "predict_title": "Новый запрос на классификацию",
+        "field_title": "Название достижения",
+        "field_description": "Описание (минимум 40 символов)",
+        "field_source": "Ссылка на источник (необязательно)",
+        "predict_btn": "Отправить на классификацию",
+        "tariff_note": "1 кредит списывается за каждое успешно обработанное достижение. "
+                       "Ошибочные данные возвращаются с пояснениями и не тарифицируются.",
+        # История
+        "history_title": "История операций",
+        "tasks_title": "ML-запросы",
+        "tx_title": "Транзакции",
+        "col_date": "Дата",
+        "col_status": "Статус",
+        "col_charged": "Списано",
+        "col_type": "Тип",
+        "details": "подробнее",
+        "no_tasks": "Запросов пока не было.",
+        "no_tx": "Операций пока не было.",
+        "type_credit": "пополнение",
+        "type_debit": "списание",
+        # Страница задачи
+        "task_title": "Задача",
+        "created_label": "создана",
+        "records_title": "Обработанные достижения",
+        "col_title": "Название",
+        "col_category": "Категория",
+        "col_confidence": "Уверенность",
+        "col_review": "Ревью человеком",
+        "col_worker": "Воркер",
+        "no_records": "Результатов пока нет, воркер обрабатывает задачу. "
+                      "Страница обновляется автоматически.",
+        "missing_label": "Не хватает",
+        "domain_msgs": {
+            "не предъявлено измеримых метрик": "не предъявлено измеримых метрик",
+            "не предъявлен URL": "не предъявлен URL",
+            "title is required": "не указано название",
+            "описание должно иметь минимум 40 символов": "описание должно иметь минимум 40 символов",
+        },
+        "failed_hint": "Задача завершилась с ошибкой: на балансе не хватило кредитов "
+                       "для списания. Пополните баланс в кабинете и отправьте запрос снова.",
+        "rejected_title": "Отклонённые данные",
+        "no_rejected": "Отклонённых данных нет.",
+        "item_prefix": "Элемент",
+        "yes": "да",
+        "no": "нет",
+        # Статусы и категории
+        "statuses": {
+            "created": "в очереди",
+            "validating": "валидация",
+            "processing": "обработка",
+            "completed": "завершена",
+            "partially_completed": "частично завершена",
+            "failed": "ошибка",
+        },
+        "categories": {
+            "innovation": "Инновации",
+            "recognition_leader": "Признание лидерства",
+            "recognition_potential": "Потенциал признания",
+            "significant_contribution": "Значимый вклад",
+            "academic_contribution": "Академический вклад",
+            "outside_work": "Активность вне работы",
+            "irrelevant": "Нерелевантно",
+            "insufficiaent": "Недостаточно данных",
+            "insufficient": "Недостаточно данных",
+        },
+    },
+    "en": {
+        "nav_home": "Home",
+        "nav_cabinet": "Dashboard",
+        "nav_history": "History",
+        "nav_login": "Sign in",
+        "nav_signup": "Sign up",
+        "nav_logout": "Sign out",
+        "nav_admin": "Admin",
+        "admin_title": "Administration",
+        "admin_users_title": "Users",
+        "admin_topup_title": "Top up a user's balance",
+        "admin_tx_link": "All transactions",
+        "col_email": "Email",
+        "col_role": "Role",
+        "col_balance": "Balance",
+        "col_user": "User",
+        "err_no_user": "User not found.",
+        "msg_registered": "Registration complete, welcome aboard!",
+        "msg_topup_ok": "Balance topped up.",
+        "msg_queued": "Task queued for processing, this page refreshes automatically.",
+        "err_invalid_amount": "Amount must be positive.",
+        "err_email_taken": "A user with this email already exists.",
+        "err_wrong_credentials": "Invalid email or password.",
+        "err_no_model": "No models available.",
+        "hero_sub": "The platform structures descriptions of professional achievements: "
+                    "an mDeBERTa zero-shot classifier assigns each achievement to one of "
+                    "five categories with a confidence score. The model does not make "
+                    "decisions, it prepares material for expert review.",
+        "how_title": "How it works",
+        "how_1": "Create an account and get a credit balance.",
+        "how_2": "Submit one or several achievements as text.",
+        "how_3": "The service validates the input, processes valid items and returns "
+                 "categories with model confidence.",
+        "how_4": "Credits are charged only for successfully processed achievements, "
+                 "and the full history stays available in your dashboard.",
+        "categories_title": "Classification categories",
+        "cta_signup": "Create account",
+        "cta_login": "Sign in",
+        "cta_cabinet": "Open dashboard",
+        "login_title": "Sign in",
+        "signup_title": "Create account",
+        "email": "Email",
+        "password": "Password",
+        "login_btn": "Sign in",
+        "signup_btn": "Sign up",
+        "no_account": "No account yet?",
+        "have_account": "Already have an account?",
+        "cabinet_title": "Dashboard",
+        "balance_label": "Current balance",
+        "credits_unit": "credits",
+        "topup_title": "Top up balance",
+        "amount": "Amount",
+        "topup_btn": "Top up",
+        "predict_title": "New classification request",
+        "field_title": "Achievement title",
+        "field_description": "Description (at least 40 characters)",
+        "field_source": "Source URL (optional)",
+        "predict_btn": "Submit for classification",
+        "tariff_note": "1 credit is charged per successfully processed achievement. "
+                       "Invalid data is returned with explanations and is never charged.",
+        "history_title": "Activity history",
+        "tasks_title": "ML requests",
+        "tx_title": "Transactions",
+        "col_date": "Date",
+        "col_status": "Status",
+        "col_charged": "Charged",
+        "col_type": "Type",
+        "details": "details",
+        "no_tasks": "No requests yet.",
+        "no_tx": "No transactions yet.",
+        "type_credit": "top up",
+        "type_debit": "charge",
+        "task_title": "Task",
+        "created_label": "created",
+        "records_title": "Processed achievements",
+        "col_title": "Title",
+        "col_category": "Category",
+        "col_confidence": "Confidence",
+        "col_review": "Human review",
+        "col_worker": "Worker",
+        "no_records": "No results yet, a worker is processing the task. "
+                      "This page refreshes automatically.",
+        "missing_label": "Missing",
+        "domain_msgs": {
+            "не предъявлено измеримых метрик": "no measurable metrics provided",
+            "не предъявлен URL": "no source URL provided",
+            "title is required": "title is required",
+            "описание должно иметь минимум 40 символов": "description must be at least 40 characters",
+        },
+        "failed_hint": "The task failed: not enough credits on your balance for the "
+                       "charge. Top up in the dashboard and submit the request again.",
+        "rejected_title": "Rejected data",
+        "no_rejected": "No rejected data.",
+        "item_prefix": "Item",
+        "yes": "yes",
+        "no": "no",
+        "statuses": {
+            "created": "queued",
+            "validating": "validating",
+            "processing": "processing",
+            "completed": "completed",
+            "partially_completed": "partially completed",
+            "failed": "failed",
+        },
+        "categories": {
+            "innovation": "Innovation",
+            "recognition_leader": "Leadership recognition",
+            "recognition_potential": "Recognition potential",
+            "significant_contribution": "Significant contribution",
+            "academic_contribution": "Academic contribution",
+            "outside_work": "Outside work activity",
+            "irrelevant": "Irrelevant",
+            "insufficiaent": "Insufficient data",
+            "insufficient": "Insufficient data",
+        },
+    },
+}
+
+
+def get_strings(lang: str | None) -> dict:
+    """Словарь строк для языка; неизвестный код сводится к дефолту."""
+    if lang not in SUPPORTED_LANGS:
+        lang = DEFAULT_LANG
+    return STRINGS[lang]
